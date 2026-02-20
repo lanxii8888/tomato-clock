@@ -1,0 +1,1185 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="public/svg/favicon.svg" type="image/svg+xml" />
+    <title>极简番茄</title>
+    <style>
+      :root {
+        --bg: #f5f0eb;
+        --card: #fff;
+        --text: #2c2c2c;
+        --text-sub: #888;
+        --accent: #e8533a;
+        --accent-light: #f47d68;
+        --break-color: #4a9d7f;
+        --ring-bg: #e0d9d2;
+        --btn-bg: #2c2c2c;
+        --btn-text: #fff;
+        --shadow: rgba(0, 0, 0, 0.08);
+        --tag-bg: #f0ebe6;
+      }
+      .dark {
+        --bg: #1a1a1a;
+        --card: #252525;
+        --text: #e8e0d8;
+        --text-sub: #666;
+        --accent: #e8533a;
+        --accent-light: #f47d68;
+        --break-color: #4a9d7f;
+        --ring-bg: #333;
+        --btn-bg: #e8e0d8;
+        --btn-text: #1a1a1a;
+        --shadow: rgba(0, 0, 0, 0.3);
+        --tag-bg: #2e2e2e;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition:
+          background 0.3s,
+          color 0.3s;
+        user-select: none;
+      }
+
+      /* Top bar */
+      .topbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+        z-index: 100;
+      }
+
+      .logo {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text);
+        letter-spacing: 0.03em;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .logo-icon {
+        width: 22px;
+        height: 22px;
+      }
+
+      .topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .icon-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--text-sub);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        transition:
+          color 0.2s,
+          background 0.2s;
+        font-size: 16px;
+      }
+
+      .icon-btn:hover {
+        color: var(--text);
+        background: var(--tag-bg);
+      }
+
+      /* Main container */
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 32px;
+        padding: 80px 24px 40px;
+        width: 100%;
+        max-width: 480px;
+      }
+
+      /* Mode tabs */
+      .mode-tabs {
+        display: flex;
+        gap: 6px;
+        background: var(--tag-bg);
+        border-radius: 12px;
+        padding: 4px;
+      }
+
+      .mode-tab {
+        padding: 7px 18px;
+        border-radius: 9px;
+        border: none;
+        background: transparent;
+        color: var(--text-sub);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+      }
+
+      .mode-tab.active {
+        background: var(--card);
+        color: var(--text);
+        box-shadow: 0 1px 4px var(--shadow);
+      }
+
+      /* Timer ring */
+      .timer-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .timer-ring {
+        transform: rotate(-90deg);
+        filter: drop-shadow(0 4px 12px var(--shadow));
+      }
+
+      .ring-bg {
+        fill: none;
+        stroke: var(--ring-bg);
+        stroke-width: 8;
+        transition: stroke 0.3s;
+      }
+
+      .ring-progress {
+        fill: none;
+        stroke: var(--accent);
+        stroke-width: 8;
+        stroke-linecap: round;
+        transition:
+          stroke-dashoffset 1s linear,
+          stroke 0.3s;
+      }
+
+      .ring-progress.break {
+        stroke: var(--break-color);
+      }
+
+      .timer-center {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+      }
+
+      .timer-display {
+        font-size: 58px;
+        font-weight: 300;
+        letter-spacing: -2px;
+        color: var(--text);
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .timer-label {
+        font-size: 12px;
+        color: var(--text-sub);
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      /* Controls */
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .btn-main {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        border: none;
+        background: var(--btn-bg);
+        color: var(--btn-text);
+        font-size: 22px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          transform 0.15s,
+          opacity 0.15s;
+        box-shadow: 0 4px 14px var(--shadow);
+      }
+
+      .btn-main:hover {
+        opacity: 0.88;
+      }
+      .btn-main:active {
+        transform: scale(0.95);
+      }
+
+      .btn-secondary {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: none;
+        background: var(--tag-bg);
+        color: var(--text-sub);
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+      }
+
+      .btn-secondary:hover {
+        color: var(--text);
+        background: var(--ring-bg);
+      }
+
+      /* Tomato count */
+      .tomato-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+        min-height: 28px;
+      }
+
+      .tomato-icon {
+        font-size: 20px;
+        transition: transform 0.3s;
+        animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      }
+
+      @keyframes popIn {
+        from {
+          transform: scale(0);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      .tomato-label {
+        font-size: 12px;
+        color: var(--text-sub);
+        font-weight: 500;
+      }
+
+      /* Stats */
+      .stats {
+        display: flex;
+        gap: 24px;
+        text-align: center;
+      }
+
+      .stat-item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .stat-val {
+        font-size: 22px;
+        font-weight: 500;
+        color: var(--text);
+      }
+
+      .stat-key {
+        font-size: 11px;
+        color: var(--text-sub);
+        letter-spacing: 0.05em;
+      }
+
+      .divider {
+        width: 1px;
+        height: 32px;
+        background: var(--ring-bg);
+        align-self: center;
+      }
+
+      /* Settings panel */
+      .settings-panel {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 300px;
+        background: var(--card);
+        box-shadow: -4px 0 24px var(--shadow);
+        padding: 64px 24px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        transform: translateX(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 200;
+      }
+
+      .settings-panel.open {
+        transform: translateX(0);
+      }
+
+      .settings-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      .setting-row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .setting-label {
+        font-size: 12px;
+        color: var(--text-sub);
+        font-weight: 500;
+        letter-spacing: 0.04em;
+      }
+
+      .setting-control {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .setting-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: 1px solid var(--ring-bg);
+        background: var(--tag-bg);
+        color: var(--text);
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+        font-family: inherit;
+      }
+
+      .setting-btn:hover {
+        background: var(--ring-bg);
+      }
+
+      .setting-val {
+        font-size: 18px;
+        font-weight: 500;
+        min-width: 48px;
+        width: 48px;
+        text-align: center;
+        color: var(--text);
+        background: transparent;
+        border: none;
+        border-bottom: 1.5px solid var(--ring-bg);
+        outline: none;
+        font-family: inherit;
+        padding: 2px 4px;
+        border-radius: 0;
+        transition: border-color 0.2s;
+        cursor: text;
+      }
+      .setting-val:focus {
+        border-bottom-color: var(--accent);
+      }
+      /* Remove number input arrows */
+      .setting-val::-webkit-outer-spin-button,
+      .setting-val::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      .setting-val[type="number"] {
+        -moz-appearance: textfield;
+      }
+
+      /* Overlay */
+      .overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.3);
+        z-index: 150;
+        backdrop-filter: blur(2px);
+      }
+
+      .overlay.open {
+        display: block;
+      }
+
+      /* Task input */
+      .task-area {
+        width: 100%;
+      }
+
+      .task-input {
+        width: 100%;
+        background: transparent;
+        border: none;
+        border-bottom: 1.5px solid var(--ring-bg);
+        outline: none;
+        font-family: inherit;
+        font-size: 14px;
+        color: var(--text);
+        padding: 8px 0;
+        text-align: center;
+        transition: border-color 0.2s;
+      }
+
+      .task-input::placeholder {
+        color: var(--text-sub);
+      }
+      .task-input:focus {
+        border-color: var(--accent);
+      }
+
+      /* Fullscreen mode */
+      .fullscreen-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 10;
+      }
+
+      /* Notification */
+      .notif {
+        position: fixed;
+        top: 60px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-20px);
+        background: var(--btn-bg);
+        color: var(--btn-text);
+        padding: 10px 20px;
+        border-radius: 100px;
+        font-size: 13px;
+        font-weight: 500;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s;
+        z-index: 999;
+        white-space: nowrap;
+      }
+
+      .notif.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      svg {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="logo">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="13" r="8" fill="#e8533a" opacity="0.9" />
+          <ellipse
+            cx="12"
+            cy="6"
+            rx="3"
+            ry="2.5"
+            fill="#4a9d7f"
+            transform="rotate(-15 12 6)"
+          />
+          <ellipse
+            cx="14"
+            cy="5"
+            rx="1.5"
+            ry="1"
+            fill="#3d8a6c"
+            transform="rotate(20 14 5)"
+          />
+        </svg>
+        极简番茄
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeBtn" title="切换夜间模式">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+        <button class="icon-btn" id="settingsBtn" title="设置">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+            />
+          </svg>
+        </button>
+        <button class="icon-btn" id="fullscreenBtn" title="全屏">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path
+              d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"
+            />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="container">
+      <!-- Mode tabs -->
+      <div class="mode-tabs">
+        <button class="mode-tab active" data-mode="focus">专注</button>
+        <button class="mode-tab" data-mode="short">短休息</button>
+        <button class="mode-tab" data-mode="long">长休息</button>
+      </div>
+
+      <!-- Task input -->
+      <div class="task-area">
+        <input
+          class="task-input"
+          id="taskInput"
+          type="text"
+          placeholder="今天要做什么？"
+          maxlength="40"
+        />
+      </div>
+
+      <!-- Timer ring -->
+      <div class="timer-wrapper">
+        <svg class="timer-ring" width="240" height="240" viewBox="0 0 240 240">
+          <circle class="ring-bg" cx="120" cy="120" r="108" />
+          <circle
+            class="ring-progress"
+            id="ringProgress"
+            cx="120"
+            cy="120"
+            r="108"
+            stroke-dasharray="678.6"
+            stroke-dashoffset="0"
+          />
+        </svg>
+        <div class="timer-center">
+          <div class="timer-display" id="timerDisplay">25:00</div>
+          <div class="timer-label" id="timerLabel">专注时间</div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <button class="btn-secondary" id="resetBtn" title="重置">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+          </svg>
+        </button>
+        <button class="btn-main" id="startBtn">
+          <svg
+            id="playIcon"
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          <svg
+            id="pauseIcon"
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            style="display: none"
+          >
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+          </svg>
+        </button>
+        <button class="btn-secondary" id="skipBtn" title="跳过">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path d="m5 4 10 8-10 8V4zM19 5v14" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Tomato count -->
+      <div class="tomato-row" id="tomatoRow">
+        <span class="tomato-label" id="tomatoLabel">今日番茄：0</span>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat-item">
+          <div class="stat-val" id="statFocus">0</div>
+          <div class="stat-key">完成番茄</div>
+        </div>
+        <div class="divider"></div>
+        <div class="stat-item">
+          <div class="stat-val" id="statTime">0</div>
+          <div class="stat-key">专注分钟</div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Settings panel -->
+    <div class="overlay" id="overlay"></div>
+    <div class="settings-panel" id="settingsPanel">
+      <div class="settings-title">⚙️ 设置</div>
+
+      <div class="setting-row">
+        <div class="setting-label">专注时长（分钟）</div>
+        <div class="setting-control">
+          <button class="setting-btn" onclick="adjustSetting('focus', -1)">
+            −
+          </button>
+          <input
+            class="setting-val"
+            type="number"
+            id="setFocus"
+            value="25"
+            min="1"
+            max="120"
+            onchange="applySetting('focus')"
+            oninput="applySetting('focus')"
+          />
+          <button class="setting-btn" onclick="adjustSetting('focus', 1)">
+            +
+          </button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">短休息（分钟）</div>
+        <div class="setting-control">
+          <button class="setting-btn" onclick="adjustSetting('short', -1)">
+            −
+          </button>
+          <input
+            class="setting-val"
+            type="number"
+            id="setShort"
+            value="5"
+            min="1"
+            max="60"
+            onchange="applySetting('short')"
+            oninput="applySetting('short')"
+          />
+          <button class="setting-btn" onclick="adjustSetting('short', 1)">
+            +
+          </button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">长休息（分钟）</div>
+        <div class="setting-control">
+          <button class="setting-btn" onclick="adjustSetting('long', -1)">
+            −
+          </button>
+          <input
+            class="setting-val"
+            type="number"
+            id="setLong"
+            value="15"
+            min="1"
+            max="120"
+            onchange="applySetting('long')"
+            oninput="applySetting('long')"
+          />
+          <button class="setting-btn" onclick="adjustSetting('long', 1)">
+            +
+          </button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">长休息前番茄数</div>
+        <div class="setting-control">
+          <button class="setting-btn" onclick="adjustSetting('rounds', -1)">
+            −
+          </button>
+          <input
+            class="setting-val"
+            type="number"
+            id="setRounds"
+            value="4"
+            min="1"
+            max="10"
+            onchange="applySetting('rounds')"
+            oninput="applySetting('rounds')"
+          />
+          <button class="setting-btn" onclick="adjustSetting('rounds', 1)">
+            +
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notif" id="notif"></div>
+
+    <script>
+      // ── Audio Context ──
+      let audioCtx = null;
+
+      function getAudioCtx() {
+        if (!audioCtx)
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        return audioCtx;
+      }
+
+      // ── Completion bell ──
+      function playCompleteBell() {
+        try {
+          const ctx = getAudioCtx();
+          [523.25, 659.25, 783.99].forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.18);
+            gain.gain.linearRampToValueAtTime(
+              0.28,
+              ctx.currentTime + i * 0.18 + 0.01,
+            );
+            gain.gain.exponentialRampToValueAtTime(
+              0.001,
+              ctx.currentTime + i * 0.18 + 1.2,
+            );
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + i * 0.18);
+            osc.stop(ctx.currentTime + i * 0.18 + 1.2);
+          });
+        } catch (e) {}
+      }
+
+      // ── State ──
+      const STORAGE_KEY = "jijian-fanqie-settings";
+      const defaults = { focus: 25, short: 5, long: 15, rounds: 4 };
+
+      function loadSettings() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+          if (saved) return Object.assign({}, defaults, saved);
+        } catch (e) {}
+        return Object.assign({}, defaults);
+      }
+
+      function saveSettings() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+        } catch (e) {}
+      }
+
+      const settings = loadSettings();
+      const limits = {
+        focus: [1, 120],
+        short: [1, 60],
+        long: [1, 120],
+        rounds: [1, 10],
+      };
+
+      const modes = {
+        focus: { label: "专注时间" },
+        short: { label: "短暂休息" },
+        long: { label: "长时休息" },
+      };
+
+      let currentMode = "focus";
+      let totalSeconds = settings.focus * 60;
+      let remainSeconds = totalSeconds;
+      let isRunning = false;
+      let timer = null;
+      let completedToday = 0;
+      let totalMinutes = 0;
+      let roundCount = 0;
+      let faviconAnimation = null;
+      let isPageHidden = false;
+
+      const CIRCUMFERENCE = 2 * Math.PI * 108;
+
+      const display = document.getElementById("timerDisplay");
+      const label = document.getElementById("timerLabel");
+      const ring = document.getElementById("ringProgress");
+      const startBtn = document.getElementById("startBtn");
+      const playIcon = document.getElementById("playIcon");
+      const pauseIcon = document.getElementById("pauseIcon");
+      const tomatoRow = document.getElementById("tomatoRow");
+      const tomatoLabel = document.getElementById("tomatoLabel");
+      const statFocus = document.getElementById("statFocus");
+      const statTime = document.getElementById("statTime");
+      const notif = document.getElementById("notif");
+      const taskInput = document.getElementById("taskInput");
+
+      function formatTime(s) {
+        const m = Math.floor(s / 60);
+        const sec = s % 60;
+        return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+      }
+
+      function updateRing() {
+        const progress = remainSeconds / totalSeconds;
+        const offset = CIRCUMFERENCE * (1 - progress);
+        ring.style.strokeDashoffset = offset;
+      }
+
+      function updateTitle() {
+        const task = taskInput.value.trim();
+        const time = formatTime(remainSeconds);
+        if (task) {
+          document.title = `${task} · ${time}`;
+        } else {
+          document.title = `${time} · 极简番茄`;
+        }
+      }
+
+      function startFaviconBreathing() {
+        if (faviconAnimation) return;
+
+        const BREATH_CYCLE = 4000;
+        const UPDATE_INTERVAL = 1;
+        const startTime = Date.now();
+
+        function animate() {
+          const elapsed = Date.now() - startTime;
+          const angle = ((elapsed % BREATH_CYCLE) / BREATH_CYCLE) * Math.PI * 2;
+          const opacity = 0.7 + Math.sin(angle) * 0.3;
+
+          const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="tomatoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b4a"/>
+      <stop offset="100%" style="stop-color:#e8533a"/>
+    </linearGradient>
+  </defs>
+  <g id="tomatoIcon" opacity="${opacity.toFixed(2)}">
+    <ellipse cx="32" cy="36" rx="24" ry="22" fill="url(#tomatoGradient)"/>
+    <path d="M28 14 Q32 10 36 14 Q38 18 36 22 Q32 26 28 22 Q26 18 28 14" fill="#4a9d7f"/>
+    <path d="M24 18 Q20 14 22 10" stroke="#4a9d7f" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M40 18 Q44 14 42 10" stroke="#4a9d7f" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <ellipse cx="32" cy="40" rx="3" ry="4" fill="#c73e2a" opacity="0.3"/>
+  </g>
+</svg>`;
+
+          const link = document.querySelector('link[rel="icon"]');
+          if (link) {
+            link.href = "data:image/svg+xml," + encodeURIComponent(svg);
+          }
+        }
+
+        animate();
+        faviconAnimation = setInterval(animate, UPDATE_INTERVAL);
+      }
+
+      function stopFaviconBreathing() {
+        if (faviconAnimation) {
+          clearInterval(faviconAnimation);
+          faviconAnimation = null;
+        }
+        const link = document.querySelector('link[rel="icon"]');
+        if (link) {
+          link.href = "public/svg/favicon.svg";
+        }
+      }
+
+      function setMode(mode) {
+        currentMode = mode;
+        totalSeconds = settings[mode] * 60;
+        remainSeconds = totalSeconds;
+        isRunning = false;
+        clearInterval(timer);
+        stopFaviconBreathing();
+        display.textContent = formatTime(remainSeconds);
+        label.textContent = modes[mode].label;
+        updateRing();
+        ring.classList.toggle("break", mode !== "focus");
+        document.querySelectorAll(".mode-tab").forEach((t) => {
+          t.classList.toggle("active", t.dataset.mode === mode);
+        });
+        playIcon.style.display = "";
+        pauseIcon.style.display = "none";
+        updateTitle();
+      }
+
+      function tick() {
+        if (remainSeconds <= 0) {
+          clearInterval(timer);
+          isRunning = false;
+          playIcon.style.display = "";
+          pauseIcon.style.display = "none";
+          onComplete();
+          return;
+        }
+        remainSeconds--;
+        display.textContent = formatTime(remainSeconds);
+        updateRing();
+        updateTitle();
+      }
+
+      function toggleTimer() {
+        if (isRunning) {
+          clearInterval(timer);
+          isRunning = false;
+          playIcon.style.display = "";
+          pauseIcon.style.display = "none";
+          stopFaviconBreathing();
+        } else {
+          isRunning = true;
+          playIcon.style.display = "none";
+          pauseIcon.style.display = "";
+          timer = setInterval(tick, 1000);
+          if (isPageHidden) {
+            startFaviconBreathing();
+          }
+        }
+      }
+
+      function onComplete() {
+        playCompleteBell();
+        stopFaviconBreathing();
+        if (currentMode === "focus") {
+          completedToday++;
+          roundCount++;
+          totalMinutes += settings.focus;
+          updateStats();
+          addTomato();
+          showNotif("🍅 番茄完成！休息一下吧");
+          setTimeout(() => {
+            if (roundCount >= settings.rounds) {
+              roundCount = 0;
+              setMode("long");
+            } else setMode("short");
+          }, 800);
+        } else {
+          showNotif("✅ 休息结束！开始专注吧");
+          setTimeout(() => setMode("focus"), 800);
+        }
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification("极简番茄", {
+            body:
+              currentMode === "focus"
+                ? "专注时间结束，休息一下！"
+                : "休息结束，继续专注！",
+          });
+        }
+      }
+
+      function addTomato() {
+        const icons = document.querySelectorAll(".tomato-icon");
+        const icon = document.createElement("span");
+        icon.className = "tomato-icon";
+        icon.textContent = "🍅";
+        icon.style.animationDelay = `${icons.length * 0.05}s`;
+        tomatoRow.insertBefore(icon, tomatoLabel);
+      }
+
+      function updateStats() {
+        tomatoLabel.textContent = `今日番茄：${completedToday}`;
+        statFocus.textContent = completedToday;
+        statTime.textContent = totalMinutes;
+      }
+
+      function showNotif(msg) {
+        notif.textContent = msg;
+        notif.classList.add("show");
+        setTimeout(() => notif.classList.remove("show"), 2500);
+      }
+
+      // ── Settings ──
+      window.adjustSetting = function (key, delta) {
+        const [min, max] = limits[key];
+        settings[key] = Math.max(min, Math.min(max, settings[key] + delta));
+        document.getElementById(
+          "set" + key.charAt(0).toUpperCase() + key.slice(1),
+        ).value = settings[key];
+        saveSettings();
+        if (key === currentMode) setMode(currentMode);
+      };
+
+      window.applySetting = function (key) {
+        const el = document.getElementById(
+          "set" + key.charAt(0).toUpperCase() + key.slice(1),
+        );
+        const [min, max] = limits[key];
+        let val = parseInt(el.value, 10);
+        if (isNaN(val) || val < 1) return;
+        val = Math.max(min, Math.min(max, val));
+        settings[key] = val;
+        el.value = val;
+        saveSettings();
+        if (key === currentMode) setMode(currentMode);
+      };
+
+      // Mode tabs
+      document.querySelectorAll(".mode-tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          clearInterval(timer);
+          isRunning = false;
+          setMode(tab.dataset.mode);
+        });
+      });
+
+      startBtn.addEventListener("click", toggleTimer);
+
+      taskInput.addEventListener("input", updateTitle);
+
+      document.getElementById("resetBtn").addEventListener("click", () => {
+        clearInterval(timer);
+        isRunning = false;
+        playIcon.style.display = "";
+        pauseIcon.style.display = "none";
+        stopFaviconBreathing();
+        remainSeconds = totalSeconds;
+        display.textContent = formatTime(remainSeconds);
+        updateRing();
+        updateTitle();
+      });
+
+      document.getElementById("skipBtn").addEventListener("click", () => {
+        clearInterval(timer);
+        isRunning = false;
+        stopFaviconBreathing();
+        remainSeconds = 0;
+        updateRing();
+        onComplete();
+      });
+
+      document.getElementById("themeBtn").addEventListener("click", () => {
+        document.body.classList.toggle("dark");
+      });
+
+      document.getElementById("settingsBtn").addEventListener("click", () => {
+        document.getElementById("settingsPanel").classList.add("open");
+        document.getElementById("overlay").classList.add("open");
+      });
+
+      document.getElementById("overlay").addEventListener("click", () => {
+        document.getElementById("settingsPanel").classList.remove("open");
+        document.getElementById("overlay").classList.remove("open");
+      });
+
+      document.getElementById("fullscreenBtn").addEventListener("click", () => {
+        if (!document.fullscreenElement)
+          document.documentElement.requestFullscreen?.();
+        else document.exitFullscreen?.();
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.target.tagName === "INPUT") return;
+        if (e.code === "Space") {
+          e.preventDefault();
+          toggleTimer();
+        }
+        if (e.code === "KeyR") {
+          clearInterval(timer);
+          isRunning = false;
+          playIcon.style.display = "";
+          pauseIcon.style.display = "none";
+          stopFaviconBreathing();
+          remainSeconds = totalSeconds;
+          display.textContent = formatTime(remainSeconds);
+          updateRing();
+          updateTitle();
+        }
+      });
+
+      if ("Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission();
+      }
+
+      // Sync input fields from loaded settings
+      ["focus", "short", "long", "rounds"].forEach((key) => {
+        document.getElementById(
+          "set" + key.charAt(0).toUpperCase() + key.slice(1),
+        ).value = settings[key];
+      });
+
+      ring.style.strokeDasharray = CIRCUMFERENCE;
+      ring.style.strokeDashoffset = 0;
+      setMode("focus");
+      updateTitle();
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          isPageHidden = true;
+          if (isRunning) {
+            startFaviconBreathing();
+          }
+        } else {
+          isPageHidden = false;
+          stopFaviconBreathing();
+        }
+      });
+    </script>
+  </body>
+</html>

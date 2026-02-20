@@ -1,0 +1,1456 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="public/svg/noise-favicon.svg" type="image/svg+xml" />
+    <title>泡泡白噪音</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --rose: #f2a7bb;
+        --peach: #f7c8a0;
+        --sage: #a8c5a0;
+        --sky: #a8c8e8;
+        --lavender: #c4b0d8;
+        --cream: #fdf8f3;
+        --warm: #f9f2eb;
+        --text: #4a3f38;
+        --text-sub: #8a7a72;
+        --text-light: #b8a89e;
+        --glass: rgba(255, 255, 255, 0.55);
+        --glass-border: rgba(255, 255, 255, 0.8);
+        --shadow: rgba(180, 150, 130, 0.15);
+        --shadow-deep: rgba(160, 120, 100, 0.2);
+      }
+
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family: "Noto Serif SC", "PingFang SC", serif;
+        background: var(--cream);
+        color: var(--text);
+        min-height: 100vh;
+        overflow-x: hidden;
+        position: relative;
+      }
+
+      /* ── Animated background ── */
+      .bg-canvas {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        background:
+          radial-gradient(
+            ellipse 80% 60% at 15% 20%,
+            rgba(242, 167, 187, 0.18) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 60% 50% at 85% 10%,
+            rgba(168, 200, 232, 0.16) 0%,
+            transparent 55%
+          ),
+          radial-gradient(
+            ellipse 70% 60% at 70% 80%,
+            rgba(168, 197, 160, 0.15) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 50% 40% at 10% 80%,
+            rgba(196, 176, 216, 0.14) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            ellipse 40% 30% at 50% 50%,
+            rgba(247, 200, 160, 0.1) 0%,
+            transparent 60%
+          ),
+          var(--cream);
+        animation: bgShift 20s ease-in-out infinite alternate;
+      }
+
+      @keyframes bgShift {
+        0% {
+          filter: hue-rotate(0deg) brightness(1);
+        }
+        50% {
+          filter: hue-rotate(8deg) brightness(1.02);
+        }
+        100% {
+          filter: hue-rotate(-5deg) brightness(0.99);
+        }
+      }
+
+      /* Floating petals */
+      .petal {
+        position: fixed;
+        width: 8px;
+        height: 10px;
+        border-radius: 50% 0 50% 0;
+        opacity: 0;
+        animation: fall linear infinite;
+        z-index: 1;
+        pointer-events: none;
+      }
+      @keyframes fall {
+        0% {
+          transform: translateY(-20px) rotate(0deg) scale(0.8);
+          opacity: 0;
+        }
+        10% {
+          opacity: 0.6;
+        }
+        90% {
+          opacity: 0.3;
+        }
+        100% {
+          transform: translateY(100vh) rotate(720deg) scale(0.5);
+          opacity: 0;
+        }
+      }
+
+      /* ── Layout ── */
+      .page {
+        position: relative;
+        z-index: 2;
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 0 24px 80px;
+      }
+
+      /* ── Header ── */
+      header {
+        text-align: center;
+        padding: 60px 0 48px;
+        animation: fadeUp 0.8s ease both;
+      }
+
+      .logo-mark {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      .logo-bubble {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--rose), var(--peach));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        box-shadow:
+          0 4px 16px rgba(242, 167, 187, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        animation: breathe 3s ease-in-out infinite;
+      }
+
+      @keyframes breathe {
+        0%,
+        100% {
+          transform: scale(1);
+          box-shadow:
+            0 4px 16px rgba(242, 167, 187, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+        50% {
+          transform: scale(1.06);
+          box-shadow:
+            0 6px 24px rgba(242, 167, 187, 0.55),
+            inset 0 1px 0 rgba(255, 255, 255, 0.7);
+        }
+      }
+
+      h1 {
+        font-family: "Lora", serif;
+        font-size: clamp(28px, 5vw, 42px);
+        font-weight: 400;
+        letter-spacing: 0.04em;
+        background: linear-gradient(
+          135deg,
+          #c07090 0%,
+          #9090c0 50%,
+          #70a090 100%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1.2;
+      }
+
+      .tagline {
+        margin-top: 12px;
+        font-size: 14px;
+        color: var(--text-sub);
+        font-weight: 300;
+        letter-spacing: 0.06em;
+        line-height: 1.8;
+      }
+
+      /* ── Section titles ── */
+      .section-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+
+      .section-title {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-sub);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .section-line {
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(
+          to right,
+          rgba(180, 150, 130, 0.2),
+          transparent
+        );
+      }
+
+      /* ── Master controls ── */
+      .master-bar {
+        background: var(--glass);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 20px 28px;
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        box-shadow:
+          0 4px 24px var(--shadow),
+          inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        margin-bottom: 36px;
+        animation: fadeUp 0.8s 0.1s ease both;
+      }
+
+      .master-play {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        border: none;
+        background: linear-gradient(135deg, var(--rose), var(--peach));
+        color: #fff;
+        font-size: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 16px rgba(242, 167, 187, 0.45);
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+        flex-shrink: 0;
+      }
+
+      .master-play:hover {
+        transform: scale(1.06);
+        box-shadow: 0 6px 22px rgba(242, 167, 187, 0.6);
+      }
+      .master-play:active {
+        transform: scale(0.96);
+      }
+
+      .master-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .master-label {
+        font-size: 13px;
+        color: var(--text-sub);
+        margin-bottom: 4px;
+        letter-spacing: 0.04em;
+      }
+
+      .master-status {
+        font-size: 15px;
+        color: var(--text);
+        font-weight: 500;
+      }
+
+      .master-vol-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .vol-icon {
+        font-size: 14px;
+        color: var(--text-light);
+      }
+
+      .master-slider {
+        width: 100px;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 3px;
+        border-radius: 2px;
+        background: linear-gradient(
+          to right,
+          var(--rose) 0%,
+          var(--rose) var(--pct, 70%),
+          rgba(180, 150, 130, 0.25) var(--pct, 70%)
+        );
+        outline: none;
+        cursor: pointer;
+      }
+
+      .master-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 6px rgba(200, 150, 130, 0.4);
+        border: 2px solid var(--rose);
+        cursor: pointer;
+        transition: transform 0.15s;
+      }
+
+      .master-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.3);
+      }
+      .master-slider::-moz-range-thumb {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid var(--rose);
+        cursor: pointer;
+      }
+
+      /* ── Presets ── */
+      .presets-section {
+        margin-bottom: 36px;
+        animation: fadeUp 0.8s 0.2s ease both;
+      }
+
+      .presets-grid {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .preset-btn {
+        padding: 9px 18px;
+        border-radius: 100px;
+        border: 1.5px solid rgba(180, 150, 130, 0.2);
+        background: var(--glass);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        color: var(--text-sub);
+        font-size: 13px;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+        box-shadow: 0 2px 8px var(--shadow);
+      }
+
+      .preset-btn:hover {
+        border-color: var(--rose);
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.75);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px var(--shadow-deep);
+      }
+
+      .preset-btn.active {
+        border-color: var(--rose);
+        background: linear-gradient(
+          135deg,
+          rgba(242, 167, 187, 0.15),
+          rgba(247, 200, 160, 0.15)
+        );
+        color: #c07090;
+        box-shadow: 0 4px 14px rgba(242, 167, 187, 0.25);
+      }
+
+      /* ── Sound cards grid ── */
+      .sounds-section {
+        animation: fadeUp 0.8s 0.3s ease both;
+        margin-bottom: 36px;
+      }
+
+      .sounds-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 14px;
+      }
+
+      .sound-card {
+        background: var(--glass);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1.5px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 20px 18px 18px;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.34, 1.4, 0.64, 1);
+        box-shadow:
+          0 2px 12px var(--shadow),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        position: relative;
+        overflow: hidden;
+        user-select: none;
+      }
+
+      .sound-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 20px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+      }
+
+      .sound-card:hover {
+        transform: translateY(-3px) scale(1.01);
+        box-shadow:
+          0 8px 28px var(--shadow-deep),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        border-color: rgba(255, 255, 255, 0.95);
+      }
+
+      .sound-card.active {
+        border-color: transparent;
+        transform: translateY(-2px);
+      }
+
+      .sound-card.active::before {
+        opacity: 1;
+      }
+
+      /* Color themes per sound */
+      .sound-card[data-id="rain"] {
+        --c1: #a8c8e8;
+        --c2: #7aaec8;
+      }
+      .sound-card[data-id="ocean"] {
+        --c1: #88bfd8;
+        --c2: #4a9db8;
+      }
+      .sound-card[data-id="cafe"] {
+        --c1: #d4a878;
+        --c2: #b88a58;
+      }
+      .sound-card[data-id="forest"] {
+        --c1: #a8c5a0;
+        --c2: #78a870;
+      }
+      .sound-card[data-id="thunder"] {
+        --c1: #9898c8;
+        --c2: #7070a8;
+      }
+      .sound-card[data-id="wind"] {
+        --c1: #b8d4c0;
+        --c2: #88b498;
+      }
+      .sound-card[data-id="fire"] {
+        --c1: #f09870;
+        --c2: #d86840;
+      }
+
+      .sound-card.active {
+        background: linear-gradient(
+          135deg,
+          rgba(var(--cr), 0.12),
+          rgba(var(--cr), 0.06)
+        );
+        box-shadow:
+          0 6px 24px rgba(var(--cr), 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      }
+
+      .sound-card[data-id="rain"].active {
+        background: linear-gradient(
+          135deg,
+          rgba(168, 200, 232, 0.18),
+          rgba(168, 200, 232, 0.06)
+        );
+        box-shadow:
+          0 6px 24px rgba(168, 200, 232, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        border-color: rgba(168, 200, 232, 0.5);
+      }
+      .sound-card[data-id="ocean"].active {
+        background: linear-gradient(
+          135deg,
+          rgba(136, 191, 216, 0.18),
+          rgba(136, 191, 216, 0.06)
+        );
+        box-shadow:
+          0 6px 24px rgba(136, 191, 216, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        border-color: rgba(136, 191, 216, 0.5);
+      }
+      .sound-card[data-id="cafe"].active {
+        background: linear-gradient(
+          135deg,
+          rgba(212, 168, 120, 0.18),
+          rgba(212, 168, 120, 0.06)
+        );
+        box-shadow:
+          0 6px 24px rgba(212, 168, 120, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        border-color: rgba(212, 168, 120, 0.5);
+      }
+      .sound-card[data-id="forest"].active {
+        background: linear-gradient(
+          135deg,
+          rgba(168, 197, 160, 0.18),
+          rgba(168, 197, 160, 0.06)
+        );
+        box-shadow:
+          0 6px 24px rgba(168, 197, 160, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        border-color: rgba(168, 197, 160, 0.5);
+      }
+      .sound-card[data-id="thunder"].active {
+        background: linear-gradient(
+          135deg,
+          rgba(152, 152, 200, 0.18),
+          rgba(152, 152, 200, 0.06)
+        );
+        box-shadow:
+          0 6px 24px rgba(152, 152, 200, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        border-color: rgba(152, 152, 200, 0.5);
+      }
+      .sound-card[data-id="wind"].active {
+        background: linear-gradient(
+          135deg,
+          rgba(184, 212, 192, 0.18),
+          rgba(184, 212, 192, 0.06)
+        );
+        box-shadow:
+          0 6px 24px rgba(184, 212, 192, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        border-color: rgba(184, 212, 192, 0.5);
+      }
+      .sound-card[data-id="fire"].active {
+        background: linear-gradient(
+          135deg,
+          rgba(240, 152, 112, 0.18),
+          rgba(240, 152, 112, 0.06)
+        );
+        box-shadow:
+          0 6px 24px rgba(240, 152, 112, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        border-color: rgba(240, 152, 112, 0.5);
+      }
+
+      .card-icon-wrap {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin-bottom: 12px;
+        background: rgba(255, 255, 255, 0.6);
+        box-shadow: 0 2px 8px var(--shadow);
+        transition: transform 0.3s;
+      }
+
+      .sound-card.active .card-icon-wrap {
+        animation: iconPulse 2s ease-in-out infinite;
+      }
+
+      @keyframes iconPulse {
+        0%,
+        100% {
+          transform: scale(1) rotate(0deg);
+        }
+        25% {
+          transform: scale(1.08) rotate(-3deg);
+        }
+        75% {
+          transform: scale(1.05) rotate(3deg);
+        }
+      }
+
+      .card-name {
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--text);
+        margin-bottom: 4px;
+        letter-spacing: 0.02em;
+      }
+
+      .card-desc {
+        font-size: 11px;
+        color: var(--text-light);
+        margin-bottom: 14px;
+        line-height: 1.5;
+      }
+
+      /* Card volume slider */
+      .card-slider-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        opacity: 0;
+        transform: translateY(4px);
+        transition:
+          opacity 0.25s,
+          transform 0.25s;
+        pointer-events: none;
+      }
+
+      .sound-card.active .card-slider-wrap {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+
+      .card-slider {
+        flex: 1;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 3px;
+        border-radius: 2px;
+        outline: none;
+        cursor: pointer;
+        background: rgba(180, 150, 130, 0.2);
+      }
+
+      .card-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--c1, #f2a7bb);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+        cursor: pointer;
+        transition: transform 0.15s;
+      }
+
+      .card-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.4);
+      }
+      .card-slider::-moz-range-thumb {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--c1, #f2a7bb);
+        border: none;
+        cursor: pointer;
+      }
+
+      .card-vol-pct {
+        font-size: 10px;
+        color: var(--text-light);
+        min-width: 24px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Playing wave animation on card */
+      .card-wave {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        border-radius: 0 0 20px 20px;
+        background: var(--c1, #f2a7bb);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.4s ease;
+      }
+
+      .sound-card.active .card-wave {
+        transform: scaleX(1);
+        animation: waveAnim 2s ease-in-out infinite;
+      }
+
+      @keyframes waveAnim {
+        0%,
+        100% {
+          opacity: 0.5;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+
+      /* ── Keyboard shortcuts ── */
+      .shortcuts-section {
+        animation: fadeUp 0.8s 0.4s ease both;
+      }
+
+      .shortcuts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 10px;
+      }
+
+      .shortcut-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        background: var(--glass);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        box-shadow: 0 1px 6px var(--shadow);
+      }
+
+      kbd {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 26px;
+        height: 22px;
+        padding: 0 6px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(180, 150, 130, 0.25);
+        font-size: 11px;
+        font-family: monospace;
+        color: var(--text);
+        box-shadow: 0 1px 3px var(--shadow);
+        flex-shrink: 0;
+      }
+
+      .shortcut-desc {
+        font-size: 12px;
+        color: var(--text-sub);
+      }
+
+      /* ── Footer ── */
+      footer {
+        text-align: center;
+        padding-top: 40px;
+        font-size: 12px;
+        color: var(--text-light);
+        letter-spacing: 0.06em;
+        animation: fadeUp 0.8s 0.5s ease both;
+      }
+
+      /* ── Animations ── */
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* ── Ripple on click ── */
+      .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        transform: scale(0);
+        animation: rippleAnim 0.5s linear;
+        pointer-events: none;
+      }
+
+      @keyframes rippleAnim {
+        to {
+          transform: scale(4);
+          opacity: 0;
+        }
+      }
+
+      /* ── Toast notification ── */
+      .toast {
+        position: fixed;
+        bottom: 32px;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: rgba(74, 63, 56, 0.88);
+        backdrop-filter: blur(12px);
+        color: #fff;
+        padding: 10px 22px;
+        border-radius: 100px;
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        opacity: 0;
+        transition: all 0.3s;
+        pointer-events: none;
+        z-index: 999;
+        white-space: nowrap;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      /* Responsive */
+      @media (max-width: 600px) {
+        .master-bar {
+          flex-wrap: wrap;
+          gap: 16px;
+        }
+        .master-vol-group {
+          width: 100%;
+        }
+        .master-slider {
+          flex: 1;
+        }
+        .sounds-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .shortcuts-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Background -->
+    <div class="bg-canvas"></div>
+
+    <!-- Floating petals -->
+    <div id="petals"></div>
+
+    <!-- Main page -->
+    <div class="page">
+      <!-- Header -->
+      <header>
+        <h1>泡泡白噪音</h1>
+        <p class="tagline">混合你专属的宁静空间 · 让烦躁随声音慢慢消散</p>
+      </header>
+
+      <!-- Master controls -->
+      <div class="master-bar">
+        <button
+          class="master-play"
+          id="masterBtn"
+          title="全部播放/暂停 (Space)"
+        >
+          <svg
+            id="masterPlayIcon"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          <svg
+            id="masterPauseIcon"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            style="display: none"
+          >
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+          </svg>
+        </button>
+        <div class="master-info">
+          <div class="master-label">总控制台</div>
+          <div class="master-status" id="masterStatus">选择声音开始混音</div>
+        </div>
+        <div class="master-vol-group">
+          <span class="vol-icon">🔈</span>
+          <input
+            class="master-slider"
+            type="range"
+            id="masterVol"
+            min="0"
+            max="100"
+            value="70"
+            style="--pct: 70%"
+          />
+          <span class="vol-icon">🔊</span>
+        </div>
+      </div>
+
+      <!-- Presets -->
+      <div class="presets-section">
+        <div class="section-head">
+          <span class="section-title">🎨 氛围预设</span>
+          <div class="section-line"></div>
+        </div>
+        <div class="presets-grid" id="presetsGrid">
+          <button class="preset-btn" data-preset="rain-cafe">
+            ☕ 雨声谈话
+          </button>
+          <button class="preset-btn" data-preset="forest-rain">
+            🌲 鸟雨雷声
+          </button>
+          <button class="preset-btn" data-preset="ocean-wind">
+            🌊 海浪风声
+          </button>
+          <button class="preset-btn" data-preset="night-forest">
+            🐦 鸟风合奏
+          </button>
+          <button class="preset-btn" data-preset="cozy-fire">
+            📺 电视雨声
+          </button>
+        </div>
+      </div>
+
+      <!-- Sounds -->
+      <div class="sounds-section">
+        <div class="section-head">
+          <span class="section-title">🎧 声音选择</span>
+          <div class="section-line"></div>
+        </div>
+        <div class="sounds-grid" id="soundsGrid">
+          <div class="sound-card" data-id="rain">
+            <div class="card-icon-wrap">🌧️</div>
+            <div class="card-name">雨声</div>
+            <div class="card-desc">轻柔的雨滴敲打窗台</div>
+            <div class="card-slider-wrap">
+              <input
+                class="card-slider"
+                type="range"
+                min="0"
+                max="100"
+                value="70"
+              />
+              <span class="card-vol-pct">70%</span>
+            </div>
+            <div class="card-wave"></div>
+          </div>
+
+          <div class="sound-card" data-id="ocean">
+            <div class="card-icon-wrap">🌊</div>
+            <div class="card-name">海浪</div>
+            <div class="card-desc">深呼吸般的浪涛起伏</div>
+            <div class="card-slider-wrap">
+              <input
+                class="card-slider"
+                type="range"
+                min="0"
+                max="100"
+                value="70"
+              />
+              <span class="card-vol-pct">70%</span>
+            </div>
+            <div class="card-wave"></div>
+          </div>
+
+          <div class="sound-card" data-id="cafe">
+            <div class="card-icon-wrap">☕</div>
+            <div class="card-name">谈话声</div>
+            <div class="card-desc">轻松的日常交谈</div>
+            <div class="card-slider-wrap">
+              <input
+                class="card-slider"
+                type="range"
+                min="0"
+                max="100"
+                value="70"
+              />
+              <span class="card-vol-pct">70%</span>
+            </div>
+            <div class="card-wave"></div>
+          </div>
+
+          <div class="sound-card" data-id="forest">
+            <div class="card-icon-wrap">🐦</div>
+            <div class="card-name">鸟声</div>
+            <div class="card-desc">清脆悦耳的鸟鸣声</div>
+            <div class="card-slider-wrap">
+              <input
+                class="card-slider"
+                type="range"
+                min="0"
+                max="100"
+                value="70"
+              />
+              <span class="card-vol-pct">70%</span>
+            </div>
+            <div class="card-wave"></div>
+          </div>
+
+          <div class="sound-card" data-id="thunder">
+            <div class="card-icon-wrap">⛈️</div>
+            <div class="card-name">雷雨声</div>
+            <div class="card-desc">雷雨交加的自然之声</div>
+            <div class="card-slider-wrap">
+              <input
+                class="card-slider"
+                type="range"
+                min="0"
+                max="100"
+                value="70"
+              />
+              <span class="card-vol-pct">70%</span>
+            </div>
+            <div class="card-wave"></div>
+          </div>
+
+          <div class="sound-card" data-id="wind">
+            <div class="card-icon-wrap">🍃</div>
+            <div class="card-name">风声</div>
+            <div class="card-desc">舒缓起伏的自然风声</div>
+            <div class="card-slider-wrap">
+              <input
+                class="card-slider"
+                type="range"
+                min="0"
+                max="100"
+                value="70"
+              />
+              <span class="card-vol-pct">70%</span>
+            </div>
+            <div class="card-wave"></div>
+          </div>
+
+          <div class="sound-card" data-id="fire">
+            <div class="card-icon-wrap">📺</div>
+            <div class="card-name">电视机</div>
+            <div class="card-desc">舒适的背景白噪音</div>
+            <div class="card-slider-wrap">
+              <input
+                class="card-slider"
+                type="range"
+                min="0"
+                max="100"
+                value="70"
+              />
+              <span class="card-vol-pct">70%</span>
+            </div>
+            <div class="card-wave"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Keyboard shortcuts -->
+      <div class="shortcuts-section">
+        <div class="section-head">
+          <span class="section-title">⌨️ 快捷键</span>
+          <div class="section-line"></div>
+        </div>
+        <div class="shortcuts-grid">
+          <div class="shortcut-item">
+            <kbd>Space</kbd><span class="shortcut-desc">全部播放/暂停</span>
+          </div>
+          <div class="shortcut-item">
+            <kbd>↑</kbd> <kbd>↓</kbd
+            ><span class="shortcut-desc">主音量调节</span>
+          </div>
+          <div class="shortcut-item">
+            <kbd>1</kbd>~<kbd>7</kbd
+            ><span class="shortcut-desc">切换对应声音</span>
+          </div>
+          <div class="shortcut-item">
+            <kbd>Esc</kbd><span class="shortcut-desc">全部停止</span>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <p>
+          🌸 泡泡白噪音 · 愿你平静 · 真实环境录音 ·
+          <a
+            href="https://bigsoundbank.com"
+            target="_blank"
+            style="color: inherit; opacity: 0.6"
+            >BigSoundBank</a
+          >
+          &amp;
+          <a
+            href="https://freesound.org"
+            target="_blank"
+            style="color: inherit; opacity: 0.6"
+            >Freesound</a
+          >
+          CC0
+        </p>
+      </footer>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+      // ══════════════════════════════════════
+      //  Real Audio Engine
+      //  Sources: BigSoundBank (CC0) & Freesound (CC0)
+      // ══════════════════════════════════════
+
+      // Audio URLs — all CC0 public domain / royalty-free
+      // BigSoundBank: https://bigsoundbank.com/UPLOAD/mp3/XXXX.mp3
+      // Freesound preview: https://freesound.org/data/previews/NNN/ID_hash-lq.mp3
+      const SOUND_URLS = {
+        rain: "public/audio/雨声.mp3",
+        ocean: "public/audio/海浪.mp3",
+        cafe: "public/audio/谈话声.wav",
+        forest: "public/audio/鸟声.mp3",
+        thunder: "public/audio/雷雨声.mp3",
+        wind: "public/audio/风声.mp3",
+        fire: "public/audio/电视机.wav",
+      };
+
+      let audioCtx = null;
+      let masterGainNode = null;
+
+      function ensureCtx() {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          masterGainNode = audioCtx.createGain();
+          masterGainNode.gain.value = 0.7;
+          masterGainNode.connect(audioCtx.destination);
+        }
+        if (audioCtx.state === "suspended") audioCtx.resume();
+      }
+
+      // Each sound engine wraps an HTMLAudioElement routed through Web Audio for gain control
+      function makeSoundEngine(id) {
+        let audioEl = null;
+        let gainNode = null;
+        let mediaSource = null;
+        let playing = false;
+        let fadeTimer = null;
+
+        function buildAudio() {
+          if (audioEl) return;
+          audioEl = new Audio();
+          audioEl.crossOrigin = "anonymous";
+          audioEl.loop = true;
+          audioEl.preload = "auto";
+          audioEl.src = SOUND_URLS[id];
+
+          gainNode = audioCtx.createGain();
+          gainNode.gain.value = 0;
+          gainNode.connect(masterGainNode);
+
+          try {
+            mediaSource = audioCtx.createMediaElementSource(audioEl);
+            mediaSource.connect(gainNode);
+          } catch (e) {
+            // Already connected (can only call once per element)
+          }
+        }
+
+        function fadeTo(targetVol, durationMs, cb) {
+          if (!gainNode) return;
+          clearInterval(fadeTimer);
+          const start = gainNode.gain.value;
+          const diff = targetVol - start;
+          const steps = 30;
+          const interval = durationMs / steps;
+          let step = 0;
+          fadeTimer = setInterval(() => {
+            step++;
+            gainNode.gain.value = start + diff * (step / steps);
+            if (step >= steps) {
+              gainNode.gain.value = targetVol;
+              clearInterval(fadeTimer);
+              if (cb) cb();
+            }
+          }, interval);
+        }
+
+        return {
+          start(vol = 0.7) {
+            if (playing) return;
+            ensureCtx();
+            buildAudio();
+            gainNode.gain.value = 0;
+            audioEl.currentTime = Math.random() * 10; // start at random offset for variety
+            audioEl.play().catch(() => {
+              // autoplay blocked — will start on next user interaction
+              showToast("🔇 浏览器需要用户交互才能播放，请再点一次");
+            });
+            playing = true;
+            fadeTo(vol, 600);
+          },
+          stop() {
+            if (!playing) return;
+            playing = false;
+            fadeTo(0, 500, () => {
+              if (audioEl) audioEl.pause();
+            });
+          },
+          setVolume(v) {
+            if (gainNode) fadeTo(v, 150);
+          },
+          isPlaying() {
+            return playing;
+          },
+        };
+      }
+
+      let globalPlaying = false;
+
+      // ══════════════════════════════════════
+      //  State & UI
+      // ══════════════════════════════════════
+      const soundDefs = [
+        { id: "rain", keys: "1" },
+        { id: "ocean", keys: "2" },
+        { id: "cafe", keys: "3" },
+        { id: "forest", keys: "4" },
+        { id: "thunder", keys: "5" },
+        { id: "wind", keys: "6" },
+        { id: "fire", keys: "7" },
+      ];
+
+      const engines = {};
+      const cardVols = {};
+      soundDefs.forEach((s) => {
+        cardVols[s.id] = 0.7;
+      });
+
+      const presets = {
+        "rain-cafe": { rain: 0.6, cafe: 0.5 },
+        "forest-rain": { forest: 0.5, rain: 0.7, thunder: 0.3 },
+        "ocean-wind": { ocean: 0.7, wind: 0.5 },
+        "night-forest": { forest: 0.6, wind: 0.3 },
+        "cozy-fire": { fire: 0.7, rain: 0.3 },
+      };
+
+      let masterVol = 0.7;
+      let activePreset = null;
+
+      // ── Initialize ──
+      function getEngine(id) {
+        if (!engines[id]) engines[id] = makeSoundEngine(id);
+        return engines[id];
+      }
+
+      function getCard(id) {
+        return document.querySelector(`.sound-card[data-id="${id}"]`);
+      }
+      function getSlider(id) {
+        return getCard(id).querySelector(".card-slider");
+      }
+      function getVolPct(id) {
+        return getCard(id).querySelector(".card-vol-pct");
+      }
+
+      function startSound(id, vol) {
+        const v = vol ?? cardVols[id];
+        cardVols[id] = v;
+        const eng = getEngine(id);
+        if (!eng.isPlaying()) eng.start(v * masterVol);
+        else eng.setVolume(v * masterVol);
+        getCard(id).classList.add("active");
+        getSlider(id).value = Math.round(v * 100);
+        getVolPct(id).textContent = Math.round(v * 100) + "%";
+        updateMasterStatus();
+      }
+
+      function stopSound(id) {
+        getEngine(id).stop();
+        getCard(id).classList.remove("active");
+        updateMasterStatus();
+      }
+
+      function toggleSound(id) {
+        if (getEngine(id).isPlaying()) stopSound(id);
+        else startSound(id);
+        activePreset = null;
+        document
+          .querySelectorAll(".preset-btn")
+          .forEach((b) => b.classList.remove("active"));
+      }
+
+      function stopAll() {
+        soundDefs.forEach((s) => {
+          if (engines[s.id]?.isPlaying()) stopSound(s.id);
+        });
+        globalPlaying = false;
+        document.getElementById("masterPlayIcon").style.display = "";
+        document.getElementById("masterPauseIcon").style.display = "none";
+        activePreset = null;
+        document
+          .querySelectorAll(".preset-btn")
+          .forEach((b) => b.classList.remove("active"));
+        updateMasterStatus();
+      }
+
+      function anyPlaying() {
+        return soundDefs.some((s) => engines[s.id]?.isPlaying());
+      }
+
+      function updateMasterStatus() {
+        const active = soundDefs
+          .filter((s) => engines[s.id]?.isPlaying())
+          .map((s) => getCard(s.id).querySelector(".card-name").textContent);
+        const status = document.getElementById("masterStatus");
+        if (active.length === 0) {
+          status.textContent = "选择声音开始混音";
+        } else {
+          status.textContent = active.join(" · ");
+        }
+        const isPlaying = active.length > 0;
+        document.getElementById("masterPlayIcon").style.display = isPlaying
+          ? "none"
+          : "";
+        document.getElementById("masterPauseIcon").style.display = isPlaying
+          ? ""
+          : "none";
+      }
+
+      // ── Card click ──
+      document.querySelectorAll(".sound-card").forEach((card) => {
+        card.addEventListener("click", (e) => {
+          if (e.target.classList.contains("card-slider")) return;
+          addRipple(e, card);
+          toggleSound(card.dataset.id);
+        });
+      });
+
+      // ── Card slider ──
+      document.querySelectorAll(".card-slider").forEach((slider) => {
+        slider.addEventListener("input", (e) => {
+          e.stopPropagation();
+          const card = slider.closest(".sound-card");
+          const id = card.dataset.id;
+          const v = slider.value / 100;
+          cardVols[id] = v;
+          slider
+            .closest(".sound-card")
+            .querySelector(".card-vol-pct").textContent = slider.value + "%";
+          if (engines[id]?.isPlaying()) engines[id].setVolume(v * masterVol);
+        });
+      });
+
+      // ── Master play/pause ──
+      document.getElementById("masterBtn").addEventListener("click", () => {
+        if (anyPlaying()) {
+          stopAll();
+        } else {
+          showToast("💡 请先选择想要的声音");
+        }
+      });
+
+      // ── Master volume ──
+      const masterSlider = document.getElementById("masterVol");
+      masterSlider.addEventListener("input", () => {
+        masterVol = masterSlider.value / 100;
+        masterSlider.style.setProperty("--pct", masterSlider.value + "%");
+        if (masterGainNode && audioCtx)
+          masterGainNode.gain.setTargetAtTime(
+            masterVol,
+            audioCtx.currentTime,
+            0.05,
+          );
+      });
+
+      // ── Presets ──
+      document.querySelectorAll(".preset-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const key = btn.dataset.preset;
+          if (activePreset === key) {
+            stopAll();
+            return;
+          }
+          stopAll();
+          const preset = presets[key];
+          setTimeout(() => {
+            Object.entries(preset).forEach(([id, vol]) => startSound(id, vol));
+            activePreset = key;
+            document
+              .querySelectorAll(".preset-btn")
+              .forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+          }, 100);
+        });
+      });
+
+      // ── Keyboard shortcuts ──
+      document.addEventListener("keydown", (e) => {
+        if (e.target.tagName === "INPUT") return;
+        if (e.code === "Space") {
+          e.preventDefault();
+          if (anyPlaying()) stopAll();
+          else showToast("💡 请先选择想要的声音");
+        }
+        if (e.code === "Escape") stopAll();
+        if (e.code === "ArrowUp") {
+          masterSlider.value = Math.min(100, +masterSlider.value + 5);
+          masterSlider.dispatchEvent(new Event("input"));
+        }
+        if (e.code === "ArrowDown") {
+          masterSlider.value = Math.max(0, +masterSlider.value - 5);
+          masterSlider.dispatchEvent(new Event("input"));
+        }
+        // 1-8 toggle sounds
+        const num = parseInt(e.key);
+        if (num >= 1 && num <= 8) {
+          const id = soundDefs[num - 1].id;
+          addRipple({ clientX: 0, clientY: 0 }, getCard(id));
+          toggleSound(id);
+        }
+      });
+
+      // ── Ripple effect ──
+      function addRipple(e, el) {
+        const r = document.createElement("div");
+        r.className = "ripple";
+        const rect = el.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height) * 1.5;
+        r.style.cssText = `width:${size}px;height:${size}px;left:${(e.clientX || rect.left + rect.width / 2) - rect.left - size / 2}px;top:${(e.clientY || rect.top + rect.height / 2) - rect.top - size / 2}px`;
+        el.appendChild(r);
+        setTimeout(() => r.remove(), 600);
+      }
+
+      // ── Toast ──
+      function showToast(msg) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        setTimeout(() => t.classList.remove("show"), 2200);
+      }
+
+      // ── Floating petals ──
+      const petalColors = [
+        "#f2a7bb",
+        "#f7c8a0",
+        "#a8c5a0",
+        "#c4b0d8",
+        "#a8c8e8",
+        "#f7d5a0",
+      ];
+      const container = document.getElementById("petals");
+      for (let i = 0; i < 12; i++) {
+        const p = document.createElement("div");
+        p.className = "petal";
+        p.style.cssText = `
+          left:${Math.random() * 100}vw;
+          background:${petalColors[i % petalColors.length]};
+          width:${6 + Math.random() * 6}px;
+          height:${8 + Math.random() * 6}px;
+          animation-duration:${12 + Math.random() * 18}s;
+          animation-delay:${Math.random() * 20}s;
+          opacity:0;
+        `;
+        container.appendChild(p);
+      }
+    </script>
+  </body>
+</html>
