@@ -829,6 +829,30 @@
       .btn.active {
         color: var(--accent);
       }
+      .btn {
+        position: relative;
+      }
+      .repeat-badge {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        font-size: 8px;
+        font-weight: bold;
+        color: var(--accent);
+        background: rgba(0, 0, 0, 0.6);
+        border-radius: 50%;
+        width: 14px;
+        height: 14px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+      #bRepeat.active .repeat-badge {
+        display: flex;
+        opacity: 1;
+      }
       .btn-play {
         width: 52px;
         height: 52px;
@@ -1201,6 +1225,7 @@
             <polyline points="7 23 3 19 7 15" />
             <path d="M21 13v2a4 4 0 0 1-4 4H3" />
           </svg>
+          <span class="repeat-badge" id="repeatBadge">1</span>
         </button>
       </div>
 
@@ -1466,7 +1491,7 @@
       let raf,
         rafTs = null;
       let shuffled = false;
-      let repeating = false;
+      let repeatMode = 0;
       let windNow = 0.5,
         windTarget = 0.5,
         windTimer = 0;
@@ -1475,7 +1500,10 @@
       audio.loop = true;
 
       audio.addEventListener("ended", function () {
-        if (!audio.loop) {
+        if (repeatMode === 1) {
+          audio.currentTime = 0;
+          audio.play().catch((e) => console.error("播放失败:", e));
+        } else {
           playNextTrack();
         }
       });
@@ -2671,7 +2699,7 @@
         const track = SCENES[scene].tracks[trackIdx];
         if (track.src) {
           if (val) {
-            audio.loop = repeating;
+            audio.loop = repeatMode === 1;
             if (audio.src !== track.src) {
               audio.src = track.src;
               audio.load();
@@ -2703,7 +2731,7 @@
             const dur = track.d;
             if (dur > 0 && progSec >= dur) {
               progSec = 0;
-              if (!repeating) {
+              if (repeatMode !== 1) {
                 playNextTrack();
               }
             }
@@ -2751,7 +2779,7 @@
       function loadAndPlayTrack() {
         const track = SCENES[scene].tracks[trackIdx];
         if (track.src) {
-          audio.loop = repeating;
+          audio.loop = repeatMode === 1;
           audio.src = track.src;
           audio.load();
           if (playing) {
@@ -2779,10 +2807,22 @@
           this.classList.toggle("active", shuffled);
         });
       document.getElementById("bRepeat").addEventListener("click", function () {
-        repeating = !repeating;
-        this.classList.toggle("active", repeating);
-        if (playing) {
-          audio.loop = repeating;
+        repeatMode = (repeatMode + 1) % 3;
+        const badge = document.getElementById("repeatBadge");
+        if (repeatMode === 0) {
+          this.classList.remove("active");
+          badge.style.display = "none";
+          audio.loop = false;
+        } else if (repeatMode === 1) {
+          this.classList.add("active");
+          badge.style.display = "flex";
+          badge.textContent = "1";
+          audio.loop = true;
+        } else {
+          this.classList.add("active");
+          badge.style.display = "flex";
+          badge.textContent = "∞";
+          audio.loop = false;
         }
       });
       document.getElementById("vol").addEventListener("input", function () {
